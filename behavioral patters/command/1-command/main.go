@@ -1,0 +1,63 @@
+package main
+
+import "fmt"
+
+var overdraftLimit = -500
+
+type BankAccount struct {
+	balance int
+}
+
+func (b *BankAccount) Deposit(amount int) {
+	b.balance += amount
+	fmt.Printf("Deposited %d, balance is now %d \n", amount, b.balance)
+}
+
+func (b *BankAccount) Withdraw(amount int) {
+	if b.balance-amount >= overdraftLimit {
+		b.balance -= amount
+		fmt.Printf("Withdrew %d, balance is now %d \n", amount, b.balance)
+	}
+}
+
+type Command interface {
+	Call()
+}
+
+type Action int
+
+const (
+	Deposit Action = iota
+	Withdraw
+)
+
+type BankAccountCommand struct {
+	account *BankAccount
+	action  Action
+	amount  int
+}
+
+func NewBankAccountCommand(ba *BankAccount, action Action, amount int) *BankAccountCommand {
+	return &BankAccountCommand{ba, action, amount}
+}
+
+func (b *BankAccountCommand) Call() {
+	switch b.action {
+	case Deposit:
+		b.account.Deposit(b.amount)
+	case Withdraw:
+		b.account.Withdraw(b.amount)
+	}
+}
+
+func main() {
+	ba := BankAccount{}
+	cmd := NewBankAccountCommand(&ba, Deposit, 100)
+	cmd.Call()
+	cmd.Call()
+	fmt.Println(ba)
+	cmd1 := NewBankAccountCommand(&ba, Withdraw, 100)
+	cmd1.Call()
+	fmt.Println(ba)
+
+}
